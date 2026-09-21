@@ -1,0 +1,10 @@
+{
+  "description": "A luxurious Indian wedding invitation site featuring elegant animations, event timelines, RSVP forms, and photo galleries to celebrate and share wedding details.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

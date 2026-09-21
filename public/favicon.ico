@@ -1,3 +1,4 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4572746bfa7acee1a1bb33a479697dfbcd7d3c0b9855f274ffbad3a4ac455428
-size 253
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="48" fill="#1a0605" stroke="#c9a84c" stroke-width="4"/>
+  <text x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" font-size="55">🪔</text>
+</svg>

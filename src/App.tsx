@@ -1076,18 +1076,25 @@ function BackgroundMusic() {
   const [hasInteracted, setHasInteracted] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
 
-  const enableAndPlayAudio = () => {
+  const enableAndPlayAudio = (e?: React.SyntheticEvent) => {
+    if (e) {
+      e.stopPropagation()
+    }
     const audio = audioRef.current
     if (!audio) return
 
     audio.volume = 1.0
     audio.muted = false
+
     audio.play().then(() => {
       setIsPlaying(true)
       setHasInteracted(true)
       setShowOverlay(false)
     }).catch(err => {
-      console.log("Audio play attempt:", err)
+      console.log("Audio play attempt error:", err)
+      // Force overlay dismiss on tap even if browser blocks audio
+      setHasInteracted(true)
+      setShowOverlay(false)
     })
   }
 
@@ -1108,8 +1115,8 @@ function BackgroundMusic() {
       setShowOverlay(true)
     })
 
-    // Listen to gestures on window
-    const events = ['click', 'touchstart', 'pointerdown', 'scroll', 'keydown']
+    // Listen to first gesture anywhere on window
+    const events = ['click', 'touchstart', 'pointerdown', 'keydown']
 
     const handleGesture = () => {
       if (audio.paused) {
@@ -1121,15 +1128,16 @@ function BackgroundMusic() {
       }
     }
 
-    events.forEach(evt => window.addEventListener(evt, handleGesture, { passive: true }))
+    events.forEach(evt => window.addEventListener(evt, handleGesture, { passive: true, once: true }))
 
     return () => {
       events.forEach(evt => window.removeEventListener(evt, handleGesture))
     }
   }, [])
 
-  const toggleMusic = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation()
+  const toggleMusic = (e: React.SyntheticEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     const audio = audioRef.current
     if (!audio) return
 
@@ -1138,10 +1146,14 @@ function BackgroundMusic() {
       setIsPlaying(false)
     } else {
       audio.muted = false
+      audio.volume = 1.0
       audio.play().then(() => {
         setIsPlaying(true)
         setShowOverlay(false)
-      }).catch(() => { })
+        setHasInteracted(true)
+      }).catch(err => {
+        console.log("Toggle audio play failed:", err)
+      })
     }
   }
 
@@ -1153,13 +1165,17 @@ function BackgroundMusic() {
         loop
         playsInline
         preload="auto"
-      />
+      >
+        <source src="/videoplayback.m4a" type="audio/mp4" />
+        <source src="/videoplayback.mp4" type="video/mp4" />
+      </audio>
 
-      {/* Royal Welcome Card Overlay to guarantee instant music start */}
+      {/* Royal Welcome Card Overlay (z-[100]) */}
       {showOverlay && !hasInteracted && (
         <div
           onClick={enableAndPlayAudio}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer transition-all duration-500 p-6"
+          onTouchStart={enableAndPlayAudio}
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/85 backdrop-blur-md cursor-pointer transition-all duration-500 p-6"
         >
           <div className="glass-card p-8 sm:p-12 rounded-3xl max-w-md w-full text-center border border-amber-400/60 shadow-2xl animate-pulse">
             <div className="text-5xl mb-3 diya-glow">🪔</div>
@@ -1179,11 +1195,12 @@ function BackgroundMusic() {
         </div>
       )}
 
-      {/* Floating Music Control Button */}
+      {/* Floating Music Control Button (z-[120]) */}
       <button
         onClick={toggleMusic}
-        className="fixed top-6 right-6 z-40 glass-card px-4 py-2.5 flex items-center gap-2 text-xs transition-all hover:scale-105 hover:border-amber-400 cursor-pointer shadow-2xl backdrop-blur-md border border-amber-400/40"
-        style={{ color: '#c9a84c' }}
+        onTouchEnd={toggleMusic}
+        className="fixed top-5 right-5 z-[120] glass-card px-4 py-2.5 flex items-center gap-2 text-xs transition-all hover:scale-105 hover:border-amber-400 cursor-pointer shadow-2xl backdrop-blur-md border border-amber-400/50"
+        style={{ color: '#c9a84c', background: 'rgba(13,3,2,0.85)' }}
         title={isPlaying ? "Click to Pause Music" : "Click to Play Music"}
       >
         <span className={`text-base ${isPlaying ? 'animate-bounce' : ''}`}>
